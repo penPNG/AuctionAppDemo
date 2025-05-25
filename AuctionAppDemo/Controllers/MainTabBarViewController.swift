@@ -22,7 +22,7 @@ class MainTabBarViewController: UITabBarController {
         vc1.tabBarItem.title = "Home"
         vc2.tabBarItem.title = "Settings"
         
-        tabBar.tintColor = .label
+        //tabBar.tintColor = .label
         
         setViewControllers([vc1, vc2], animated: true)
     }
