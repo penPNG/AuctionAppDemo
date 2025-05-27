@@ -8,6 +8,7 @@
 import UIKit
 
 class UserDetailViewController: UIViewController {
+    var user: User?
     private let userDetailTable: UITableView = {
         let table = UITableView(frame: .zero, style: .insetGrouped)
         table.register(UITableViewCell.self, forCellReuseIdentifier: "cell")

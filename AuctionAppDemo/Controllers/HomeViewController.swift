@@ -12,7 +12,7 @@ class HomeViewController: UIViewController {
     private var users: [User] = [User]()
     
     private let homeUsersTable: UITableView = {
-        let table = UITableView(frame: .zero, style: .plain)
+        let table = UITableView(frame: .zero, style: .insetGrouped)
         table.register(UsersTableViewCell.self, forCellReuseIdentifier: UsersTableViewCell.identifier)
         return table
     }()
@@ -59,19 +59,27 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: UsersTableViewCell.identifier, for: indexPath) as? UsersTableViewCell else {
             return UITableViewCell()
         }
-        cell.textLabel?.text = self.users[indexPath.row].name
-        cell.imageView?.image = UIImage(systemName: "person.circle")
+        var content = cell.defaultContentConfiguration( )
+        content.text = self.users[indexPath.row].name
+        content.image = UIImage(systemName: "person.circle")
         
+        cell.contentConfiguration = content
+        cell.accessoryType = .disclosureIndicator
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //let selectedUser = users[indexPath.row]
+        let selectedUser = users[indexPath.row]
         
-        if let viewController = storyboard?.instantiateViewController(identifier: "UserDetailViewController") as? UserDetailViewController {
-            
-            //show(viewController, sender: self)
-            navigationController?.pushViewController(viewController, animated: true)
+        let viewController = UserDetailViewController()
+        viewController.user = selectedUser
+        navigationController?.pushViewController(UserDetailViewController(), animated: true)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let selectedPath = homeUsersTable.indexPathForSelectedRow {
+            homeUsersTable.deselectRow(at: selectedPath, animated: true)
         }
     }
 }
