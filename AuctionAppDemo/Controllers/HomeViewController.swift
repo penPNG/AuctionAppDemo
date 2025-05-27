@@ -9,9 +9,11 @@ import UIKit
 
 class HomeViewController: UIViewController {
     
+    private var users: [User] = [User]()
+    
     private let homeUsersTable: UITableView = {
         let table = UITableView(frame: .zero, style: .plain)
-        table.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        table.register(UsersTableViewCell.self, forCellReuseIdentifier: UsersTableViewCell.identifier)
         return table
     }()
 
@@ -35,8 +37,11 @@ class HomeViewController: UIViewController {
     private func getUserList() {
         APICaller.shared.getUsers { results in
             switch results {
-            case .success(let users):
-                print(users)
+            case .success(let _users):
+                DispatchQueue.main.async { [weak self] in
+                    self?.users = _users
+                    self?.homeUsersTable.reloadData()
+                }
             case .failure(let error):
                 print(error)
             }
@@ -47,17 +52,26 @@ class HomeViewController: UIViewController {
 
 extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 20
+        return users.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = "Hello World"
-        cell.backgroundColor = .red
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: UsersTableViewCell.identifier, for: indexPath) as? UsersTableViewCell else {
+            return UITableViewCell()
+        }
+        cell.textLabel?.text = self.users[indexPath.row].name
+        cell.imageView?.image = UIImage(systemName: "person.circle")
+        
         return cell
     }
     
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 200
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        //let selectedUser = users[indexPath.row]
+        
+        if let viewController = storyboard?.instantiateViewController(identifier: "UserDetailViewController") as? UserDetailViewController {
+            
+            //show(viewController, sender: self)
+            navigationController?.pushViewController(viewController, animated: true)
+        }
     }
 }
