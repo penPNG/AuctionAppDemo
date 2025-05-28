@@ -13,7 +13,18 @@ class SettingsTableViewCell: UITableViewCell {
     
     private let addressSwitch: UISwitch = {
         let swatch = UISwitch()
-        swatch.isOn = true
+        DataPersistenceManager.shared.fetchSettings() { result in
+            switch result {
+            case .success(let settingsData):
+                if settingsData.showAddress {
+                    swatch.isOn = true
+                } else {
+                    swatch.isOn = false
+                }
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
         return swatch
     }()
     
@@ -25,6 +36,20 @@ class SettingsTableViewCell: UITableViewCell {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    @objc func switchValueChanged(_ sender: UISwitch) {
+        let settingsData: SettingsData = .init(showAddress: sender.isOn)
+        DataPersistenceManager.shared.saveSettings(with: settingsData) { result in
+            switch result {
+            case .success(()):
+                #if DEBUG
+                print("Settings saved successfully")
+                #endif
+            case .failure(let error):
+                print("Error saving settings: \(error)")
+            }
+        }
     }
 
 }
