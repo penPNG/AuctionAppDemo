@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreData
 
 class SettingsViewController: UIViewController {
 
@@ -40,6 +41,7 @@ extension SettingsViewController: UITableViewDelegate, UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.identifier, for: indexPath) as? SettingsTableViewCell else {
             return UITableViewCell()
         }
+        
         var content = cell.defaultContentConfiguration()
         content.text = "Show Address"
         cell.contentConfiguration = content

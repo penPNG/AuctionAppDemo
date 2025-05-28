@@ -19,6 +19,7 @@ class SettingsTableViewCell: UITableViewCell {
     
     override init (style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        addressSwitch.addTarget(self, action: #selector(switchValueChanged(_:)), for: .valueChanged)
         accessoryView = addressSwitch
     }
     

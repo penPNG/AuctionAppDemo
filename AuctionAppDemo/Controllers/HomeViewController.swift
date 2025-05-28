@@ -73,7 +73,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
         
         let viewController = UserDetailViewController()
         viewController.user = selectedUser
-        navigationController?.pushViewController(UserDetailViewController(), animated: true)
+        navigationController?.pushViewController(viewController, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {

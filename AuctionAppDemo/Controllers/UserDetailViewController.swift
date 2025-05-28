@@ -11,7 +11,7 @@ class UserDetailViewController: UIViewController {
     var user: User?
     private let userDetailTable: UITableView = {
         let table = UITableView(frame: .zero, style: .insetGrouped)
-        table.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        table.register(UserDetailTableViewCell.self, forCellReuseIdentifier: "UserDetailTableViewCell")
         return table
     }()
     
@@ -27,6 +27,7 @@ class UserDetailViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         userDetailTable.frame = view.bounds
+        userDetailTable.sectionHeaderHeight = 24
     }
 }
 
@@ -64,44 +65,62 @@ extension UserDetailViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: UserDetailTableViewCell.identifier, for: indexPath) as? UserDetailTableViewCell else {
+            return UITableViewCell()
+        }
         var content = cell.defaultContentConfiguration()
+        content.secondaryTextProperties.font = UIFont.preferredFont(forTextStyle: UIFont.TextStyle.body)
+        content.textToSecondaryTextVerticalPadding = 8
+        content.secondaryTextProperties.color = .secondaryLabel
+        content.prefersSideBySideTextAndSecondaryText = true
         
         switch indexPath.section {
         case 0:
             switch indexPath.row {
             case 0:
-                content.text = "ID: "
+                content.text = "ID"
+                content.secondaryText = "\(user?.id ?? 0)"
             case 1:
-                content.text = "Name: "
+                content.text = "Name"
+                content.secondaryText = "\(user?.name ?? "")"
             case 2:
-                content.text = "Username: "
+                content.text = "Username"
+                content.secondaryText = "\(user?.username ?? "")"
             case 3:
-                content.text = "Email: "
+                content.text = "Email"
+                content.secondaryText = "\(user?.email ?? "")"
             case 4:
-                content.text = "Phone: "
+                content.text = "Phone"
+                content.secondaryText = "\(user?.phone ?? "")"
             default: break
             }
         case 1:
             switch indexPath.row {
             case 0:
-                content.text = "Company: "
+                content.text = "Company"
+                content.secondaryText = "\(user?.company?.name ?? "")"
             case 1:
-                content.text = "Catchphrase: "
+                content.text = "Catchphrase"
+                content.secondaryText = "\(user?.company?.catchPhrase ?? "")"
             case 2:
-                content.text = "BS: "
+                content.text = "BS"
+                content.secondaryText = "\(user?.company?.bs ?? "")"
             default: break
             }
         case 2:
             switch indexPath.row {
             case 0:
-                content.text = "Street: "
+                content.text = "Street"
+                content.secondaryText = "\(user?.address?.street ?? "")"
             case 1:
-                content.text = "Suite: "
+                content.text = "Suite"
+                content.secondaryText = "\(user?.address?.suite ?? "")"
             case 2:
-                content.text = "City: "
+                content.text = "City"
+                content.secondaryText = "\(user?.address?.city ?? "")"
             case 3:
                 content.text = "Zipcode"
+                content.secondaryText = "\(user?.address?.zipcode ?? "")"
             default: break
             }
         default: break
@@ -109,5 +128,10 @@ extension UserDetailViewController: UITableViewDelegate, UITableViewDataSource {
         cell.contentConfiguration = content
         
         return cell
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        userDetailTable.reloadData()
     }
 }
