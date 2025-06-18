@@ -10,10 +10,12 @@ import UIKit
 class MainTabBarViewController: UITabBarController {
 
     override func viewDidLoad() {
+        let networkMonitor = NetworkMonitor()
+        
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         
-        let vc1 = UINavigationController(rootViewController: HomeViewController())
+        let vc1 = UINavigationController(rootViewController: HomeViewController(nibName: nibName, nibBundle: nibBundle, networkMonitor: networkMonitor))
         let vc2 = UINavigationController(rootViewController: SettingsViewController())
         vc1.tabBarItem.image = UIImage(systemName: "house")
         vc2.tabBarItem.image = UIImage(systemName: "gear")

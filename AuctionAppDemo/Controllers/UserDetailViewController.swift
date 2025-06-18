@@ -47,16 +47,20 @@ extension UserDetailViewController: UITableViewDelegate, UITableViewDataSource {
         case 1:
             label.text = "Company Information"
         case 2:
-            DataPersistenceManager.shared.fetchSettings { result in
-                switch result {
-                case .success(let settings):
-                    if settings.showAddress {
-                        label.text = "Address"
-                    }
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
+            let userDefaults = UserDefaults.standard
+            if userDefaults.bool(forKey: "showAddress") {
+                label.text = "Address"
             }
+//            DataPersistenceManager.shared.fetchSettings { result in
+//                switch result {
+//                case .success(let settings):
+//                    if settings.showAddress {
+//                        label.text = "Address"
+//                    }
+//                case .failure(let error):
+//                    print(error.localizedDescription)
+//                }
+//            }
         default:
             label.text = ""
         }
@@ -68,18 +72,8 @@ extension UserDetailViewController: UITableViewDelegate, UITableViewDataSource {
         case 0: return 5
         case 1: return 3
         case 2:
-            var show: Bool = false
-            DataPersistenceManager.shared.fetchSettings { result in
-                switch result {
-                case .success(let settings):
-                    if settings.showAddress {
-                        show = true
-                    }
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            }
-            if show {
+            let userDefaults = UserDefaults.standard
+            if userDefaults.bool(forKey: "showAddress") {
                 return 4
             } else {
                 return 0

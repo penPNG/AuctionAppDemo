@@ -39,17 +39,8 @@ class SettingsTableViewCell: UITableViewCell {
     }
     
     @objc func switchValueChanged(_ sender: UISwitch) {
-        let settingsData: SettingsData = .init(showAddress: sender.isOn)
-        DataPersistenceManager.shared.saveSettings(with: settingsData) { result in
-            switch result {
-            case .success(()):
-                #if DEBUG
-                print("Settings saved successfully")
-                #endif
-            case .failure(let error):
-                print("Error saving settings: \(error)")
-            }
-        }
+        let userDefaults = UserDefaults.standard
+        userDefaults.set(sender.isOn, forKey: "showAddress")
     }
 
 }
