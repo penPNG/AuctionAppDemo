@@ -14,6 +14,37 @@ class DataPersistenceManager {
     
     // Good news! UserDefaults has rendered most of this... Redundant!
     
+    func saveUsers(_ users: [User], completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("Could not get AppDelegate")
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        
+        
+        users.forEach { user in
+            let savedUser = UserEntity(context: context)
+            savedUser.address?.city = user.address?.city
+            savedUser.address?.geo?.lat = user.address?.geo?.lat
+            savedUser.address?.geo?.lng = user.address?.geo?.lng
+            savedUser.address?.street = user.address?.street
+            savedUser.address?.suite = user.address?.suite
+            savedUser.address?.zipcode = user.address?.zipcode
+            savedUser.company?.bs = user.company?.bs
+            savedUser.company?.catchPhrase = user.company?.catchPhrase
+            savedUser.company?.name = user.company?.name
+            savedUser.email = user.email
+            savedUser.id = Int64(user.id)
+            savedUser.name = user.name
+            savedUser.phone = user.phone
+            savedUser.website = user.website
+            
+            do {
+                
+            }
+        }
+    }
+    
     func saveSettings(with newSettings: SettingsData, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")

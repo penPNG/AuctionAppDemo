@@ -18,10 +18,14 @@ class NetworkMonitor {
         monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { path in
             if path.status == .satisfied {
+                #if DEBUG
                 print("network on")
+                #endif
                 self.isReachable = true
             } else {
+                #if DEBUG
                 print("network off")
+                #endif
                 self.isReachable = false
             }
         }
