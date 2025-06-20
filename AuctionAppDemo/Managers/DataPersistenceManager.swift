@@ -12,8 +12,6 @@ import CoreData
 class DataPersistenceManager {
     static let shared = DataPersistenceManager()
     
-    // Good news! UserDefaults has rendered most of this... Redundant!
-    
     func saveUsers(_ users: [User], completion: @escaping (Result<Void, Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
@@ -21,45 +19,37 @@ class DataPersistenceManager {
         
         let context = appDelegate.persistentContainer.viewContext
         
-        
         users.forEach { user in
-            let savedUser = UserEntity(context: context)
-            savedUser.address?.city = user.address?.city
-            savedUser.address?.geo?.lat = user.address?.geo?.lat
-            savedUser.address?.geo?.lng = user.address?.geo?.lng
-            savedUser.address?.street = user.address?.street
-            savedUser.address?.suite = user.address?.suite
-            savedUser.address?.zipcode = user.address?.zipcode
-            savedUser.company?.bs = user.company?.bs
-            savedUser.company?.catchPhrase = user.company?.catchPhrase
-            savedUser.company?.name = user.company?.name
-            savedUser.email = user.email
-            savedUser.id = Int64(user.id)
-            savedUser.name = user.name
-            savedUser.phone = user.phone
-            savedUser.website = user.website
-            
+            let savedUser = wrapUser(from: user, with: context)
             do {
-                
+                try context.save()
+                completion(.success(()))
+            } catch {
+                print(error.localizedDescription)
+                completion(.failure(error))
             }
         }
     }
     
-    func saveSettings(with newSettings: SettingsData, completion: @escaping (Result<Void, Error>) -> Void) {
+    func fetchUsers(completion: @escaping (Result<[User], Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
         
         let context = appDelegate.persistentContainer.viewContext
         
-        let settingsToSave = Settings(context: context)
-        settingsToSave.showAddress = newSettings.showAddress
+        let request: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
+        var users: [User] = []
         
         do {
-            try context.save()
-            completion(.success(()))
+            let userEntities = try context.fetch(request)
+            
+            for userEntity in userEntities {
+                // This is known as overhead! It's a good thing this isn't a performant part of the app
+                users.append(unwrapUser(from: userEntity))
+            }
+            completion(.success(users))
         } catch {
-            print(error.localizedDescription)
             completion(.failure(error))
         }
     }
@@ -78,29 +68,6 @@ class DataPersistenceManager {
 //            }
 //        }
     
-    func fetchSettings(completion: @escaping (Result<Settings, Error>) -> Void) {
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            fatalError("Could not get AppDelegate")
-        }
-        
-        let context = appDelegate.persistentContainer.viewContext
-        
-        let request: NSFetchRequest<Settings>
-        
-        request = Settings.fetchRequest()
-        
-        do {
-            let oldSettings = try context.fetch(request) // return default if zero
-            if oldSettings.isEmpty {
-                completion(.success(defaultSettings(with: context)))
-                return
-            }
-            completion(.success(oldSettings.last!))
-        } catch {
-            completion(.failure(error))
-        }
-    }
-    
     // Reference for data fetching
     
 //    DataPersistenceManager.shared.fetchSettings { result in
@@ -114,9 +81,37 @@ class DataPersistenceManager {
 //        }
 //    }
     
-    private func defaultSettings(with context: NSManagedObjectContext) -> Settings {
-        let newSave = Settings.init(context: context)
-        newSave.showAddress = true
-        return newSave
+    // entity casting
+    private func wrapUser(from user: User, with context: NSManagedObjectContext) -> UserEntity {
+        let entity = UserEntity(context: context)
+        entity.address_city = user.address?.city
+        entity.address_geo_lat = user.address?.geo?.lat
+        entity.address_geo_lng = user.address?.geo?.lng
+        entity.address_street = user.address?.street
+        entity.address_suite = user.address?.suite
+        entity.address_zipcode = user.address?.zipcode
+        entity.company_bs = user.company?.bs
+        entity.company_catchPhrase = user.company?.catchPhrase
+        entity.company_name = user.company?.name
+        entity.email = user.email
+        entity.id = Int64(user.id)
+        entity.name = user.name
+        entity.phone = user.phone
+        entity.username = user.username
+        entity.website = user.website
+        
+        return entity
+    }
+    
+    private func unwrapUser(from user: UserEntity) -> User {
+        let newUser = User(address: Address(city: user.address_city,
+                                            geo: Geo(lat: user.address_geo_lat, lng: user.address_geo_lng),
+                                            street: user.address_street, suite: user.address_suite,
+                                            zipcode: user.address_zipcode),
+                           company: Company(bs: user.company_bs, catchPhrase: user.company_catchPhrase,
+                                            name: user.company_name),
+                           email: user.email, id: Int(user.id), name: user.name, phone: user.phone,
+                           username: user.username, website: user.website)
+        return newUser
     }
 }

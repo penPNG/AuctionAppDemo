@@ -1,32 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="AddressEntity" representedClassName="AddressEntity" syncable="YES" codeGenerationType="class">
-        <attribute name="city" optional="YES" attributeType="String"/>
-        <attribute name="street" optional="YES" attributeType="String"/>
-        <attribute name="suite" optional="YES" attributeType="String"/>
-        <attribute name="zipcode" optional="YES" attributeType="String"/>
-        <relationship name="geo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="GeoEntity"/>
-    </entity>
-    <entity name="CompanyEntity" representedClassName="CompanyEntity" syncable="YES" codeGenerationType="class">
-        <attribute name="bs" optional="YES" attributeType="String"/>
-        <attribute name="catchPhrase" optional="YES" attributeType="String"/>
-        <attribute name="name" optional="YES" attributeType="String"/>
-    </entity>
-    <entity name="GeoEntity" representedClassName="GeoEntity" syncable="YES" codeGenerationType="class">
-        <attribute name="lat" optional="YES" attributeType="String"/>
-        <attribute name="lng" optional="YES" attributeType="String"/>
-    </entity>
-    <entity name="Settings" representedClassName="Settings" syncable="YES" codeGenerationType="class">
-        <attribute name="showAddress" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
-    </entity>
     <entity name="UserEntity" representedClassName="UserEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="address_city" optional="YES" attributeType="String"/>
+        <attribute name="address_geo_lat" optional="YES" attributeType="String"/>
+        <attribute name="address_geo_lng" optional="YES" attributeType="String"/>
+        <attribute name="address_street" optional="YES" attributeType="String"/>
+        <attribute name="address_suite" optional="YES" attributeType="String"/>
+        <attribute name="address_zipcode" optional="YES" attributeType="String"/>
+        <attribute name="company_bs" optional="YES" attributeType="String"/>
+        <attribute name="company_catchPhrase" optional="YES" attributeType="String"/>
+        <attribute name="company_name" optional="YES" attributeType="String"/>
         <attribute name="email" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="phone" optional="YES" attributeType="String"/>
         <attribute name="username" optional="YES" attributeType="String"/>
         <attribute name="website" optional="YES" attributeType="String"/>
-        <relationship name="address" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AddressEntity"/>
-        <relationship name="company" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CompanyEntity"/>
     </entity>
 </model>

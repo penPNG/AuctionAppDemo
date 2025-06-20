@@ -45,7 +45,20 @@ class HomeViewController: UIViewController {
         homeUsersTable.frame = view.bounds
     }
     
+    
     private func getUserList() {
+        DataPersistenceManager.shared.fetchUsers { results in
+            switch results {
+            case .success(let _users):
+                DispatchQueue.main.async { [weak self] in
+                    self?.users = _users
+                    self?.homeUsersTable.reloadData()
+                }
+            case .failure(let error):
+                print(error)
+            }
+        }
+        if self.users.count > 0 { return }
         if networkMonitor.isReachable {
             APICaller.shared.getUsers { results in
                 switch results {
@@ -53,6 +66,14 @@ class HomeViewController: UIViewController {
                     DispatchQueue.main.async { [weak self] in
                         self?.users = _users
                         self?.homeUsersTable.reloadData()
+                        DataPersistenceManager.shared.saveUsers(_users) { result in
+                            switch result {
+                            case .success(()):
+                                print("Users saved successfully")
+                            case .failure(let error):
+                                print("Error saving settings: \(error)")
+                            }
+                        }
                     }
                 case .failure(let error):
                     print(error)
