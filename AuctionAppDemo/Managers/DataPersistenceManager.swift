@@ -19,19 +19,34 @@ class DataPersistenceManager {
         
         let context = appDelegate.persistentContainer.viewContext
         
-        users.forEach { user in
-            let savedUser = wrapUser(from: user, with: context)
-            do {
-                try context.save()
-                completion(.success(()))
-            } catch {
-                print(error.localizedDescription)
-                completion(.failure(error))
+        // we need to compare the stored data against the new data, primitively for now
+        // if the new list is different (and valid, TODO) overwrite the old data.
+        fetchUsers { result in
+            switch result {
+            case .success(let oldUsers):
+                if !self.compareUserLists(oldUsers, compareTo: users) {
+                    for user in oldUsers {
+                        context.delete(user)
+                    }
+                    
+                    users.forEach { user in
+                        _ = self.wrapUser(from: user, with: context)
+                        do {
+                            try context.save()
+                            completion(.success(()))
+                        } catch {
+                            print(error.localizedDescription)
+                            completion(.failure(error))
+                        }
+                    }
+                }
+            case .failure(let error):
+                print(error)
             }
         }
     }
     
-    func fetchUsers(completion: @escaping (Result<[User], Error>) -> Void) {
+    func fetchUsers(completion: @escaping (Result<[UserEntity], Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
@@ -39,14 +54,15 @@ class DataPersistenceManager {
         let context = appDelegate.persistentContainer.viewContext
         
         let request: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
-        var users: [User] = []
+        var users: [UserEntity] = []
         
         do {
             let userEntities = try context.fetch(request)
+            print(userEntities.count)
             
             for userEntity in userEntities {
                 // This is known as overhead! It's a good thing this isn't a performant part of the app
-                users.append(unwrapUser(from: userEntity))
+                users.append(userEntity)
             }
             completion(.success(users))
         } catch {
@@ -103,7 +119,7 @@ class DataPersistenceManager {
         return entity
     }
     
-    private func unwrapUser(from user: UserEntity) -> User {
+    func unwrapUser(from user: UserEntity) -> User {
         let newUser = User(address: Address(city: user.address_city,
                                             geo: Geo(lat: user.address_geo_lat, lng: user.address_geo_lng),
                                             street: user.address_street, suite: user.address_suite,
@@ -113,5 +129,23 @@ class DataPersistenceManager {
                            email: user.email, id: Int(user.id), name: user.name, phone: user.phone,
                            username: user.username, website: user.website)
         return newUser
+    }
+    
+    // Returns true if the lists are equivalent
+    private func compareUserLists(_ oldList: [UserEntity], compareTo newList: [User]) -> Bool {
+        var isEqual = true
+        
+        if oldList.count != newList.count {
+            isEqual = false
+        } else {
+            for (index, user) in oldList.enumerated() {
+                if user.id != newList[index].id {
+                    isEqual = false
+                    break
+                }
+            }
+        }
+        
+        return isEqual
     }
 }

@@ -51,7 +51,9 @@ class HomeViewController: UIViewController {
             switch results {
             case .success(let _users):
                 DispatchQueue.main.async { [weak self] in
-                    self?.users = _users
+                    for _user in _users {
+                        self?.users.append(DataPersistenceManager.shared.unwrapUser(from: _user))
+                    }
                     self?.homeUsersTable.reloadData()
                 }
             case .failure(let error):

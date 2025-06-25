@@ -13,16 +13,12 @@ class SettingsTableViewCell: UITableViewCell {
     
     private let addressSwitch: UISwitch = {
         let swatch = UISwitch()
-        DataPersistenceManager.shared.fetchSettings() { result in
-            switch result {
-            case .success(let settingsData):
-                if settingsData.showAddress {
-                    swatch.isOn = true
-                } else {
-                    swatch.isOn = false
-                }
-            case .failure(let error):
-                print(error.localizedDescription)
+        let userDefaults = UserDefaults.standard
+        if userDefaults.object(forKey: "showAddress") != nil {
+            if userDefaults.bool(forKey: "showAddress") {
+                swatch.isOn = true
+            } else {
+                swatch.isOn = false
             }
         }
         return swatch

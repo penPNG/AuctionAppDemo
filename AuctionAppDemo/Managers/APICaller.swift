@@ -19,19 +19,28 @@ class APICaller {
             return
         }
         
+        #if DEBUG
+        print("before")
+        #endif
         let task = URLSession.shared.dataTask(with: URLRequest(url: url)) { data, _, error in
+            #if DEBUG
+            print(error?.localizedDescription ?? "")
+            #endif
             guard let data = data, error == nil else {
-                //print("No Data Received")
+                #if DEBUG
+                print("No Data Received")
+                #endif
                 return
             }
             
             do {
                 //let results = try JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed)
                 let results = try JSONDecoder().decode([User].self, from: data)
-                //print(results)
                 completion(.success(results))
             } catch {
-                //print(error.localizedDescription)
+                #if DEBUG
+                print(error.localizedDescription)
+                #endif
                 completion(.failure(error))
             }
         }
