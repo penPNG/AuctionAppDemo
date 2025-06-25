@@ -24,6 +24,7 @@ class SettingsTableViewCell: UITableViewCell {
         return swatch
     }()
     
+    // TODO make reusable for more options
     override init (style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         addressSwitch.addTarget(self, action: #selector(switchValueChanged(_:)), for: .valueChanged)

@@ -22,7 +22,7 @@ class HomeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private let homeUsersTable: UITableView = {
+    private let homeUsersTableView: UITableView = {
         let table = UITableView(frame: .zero, style: .insetGrouped)
         table.register(UsersTableViewCell.self, forCellReuseIdentifier: UsersTableViewCell.identifier)
         return table
@@ -30,19 +30,36 @@ class HomeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let addUserButton: UIBarButtonItem = {
+            let button = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
+            return button
+        }()
 
         view.backgroundColor = .systemBackground
-        view.addSubview(homeUsersTable)
         
-        homeUsersTable.delegate = self
-        homeUsersTable.dataSource = self
+        // The navigationBar is built into the view !!!!
+        navigationItem.title = "Users"
+        navigationItem.rightBarButtonItem = addUserButton
+        
+        view.addSubview(homeUsersTableView)
+        
+        homeUsersTableView.delegate = self
+        homeUsersTableView.dataSource = self
         
         getUserList()
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        homeUsersTable.frame = view.bounds
+        homeUsersTableView.frame = view.bounds
+    }
+    
+    @objc func addButtonPressed() {
+        print("button pressed")
+        let viewController = UserDetailViewController()
+        viewController.user = users[0]
+        navigationController?.pushViewController(viewController, animated: true)
     }
     
     
@@ -54,7 +71,7 @@ class HomeViewController: UIViewController {
                     for _user in _users {
                         self?.users.append(DataPersistenceManager.shared.unwrapUser(from: _user))
                     }
-                    self?.homeUsersTable.reloadData()
+                    self?.homeUsersTableView.reloadData()
                 }
             case .failure(let error):
                 print(error)
@@ -67,7 +84,7 @@ class HomeViewController: UIViewController {
                 case .success(let _users):
                     DispatchQueue.main.async { [weak self] in
                         self?.users = _users
-                        self?.homeUsersTable.reloadData()
+                        self?.homeUsersTableView.reloadData()
                         DataPersistenceManager.shared.saveUsers(_users) { result in
                             switch result {
                             case .success(()):
@@ -119,8 +136,8 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if let selectedPath = homeUsersTable.indexPathForSelectedRow {
-            homeUsersTable.deselectRow(at: selectedPath, animated: true)
+        if let selectedPath = homeUsersTableView.indexPathForSelectedRow {
+            homeUsersTableView.deselectRow(at: selectedPath, animated: true)
         }
     }
 }
