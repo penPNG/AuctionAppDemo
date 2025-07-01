@@ -18,11 +18,17 @@ class UserCreateViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        newUser = emptyUser()
+        
         view.backgroundColor = .systemBackground
         view.addSubview(editUserTableView)
         navigationItem.title = "Add User"
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(saveUser))
         
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        editUserTableView.keyboardDismissMode = .onDrag
         editUserTableView.delegate = self
         editUserTableView.dataSource = self
     }
@@ -33,7 +39,17 @@ class UserCreateViewController: UIViewController {
     }
     
     @objc func saveUser() {
-        
+        print(newUser!)
+    }
+    
+    @objc func keyboardWillShow(_ notification: Notification) {
+        guard let userActivity = notification.userInfo else {return}
+        let keyboardFrame:CGRect = (userActivity[UIResponder.keyboardFrameBeginUserInfoKey] as! NSValue).cgRectValue
+        editUserTableView.contentInset.bottom = keyboardFrame.height + 20
+    }
+    
+    @objc func keyboardWillHide(_ notification: Notification) {
+        editUserTableView.contentInset.bottom = 0
     }
 
     /*
