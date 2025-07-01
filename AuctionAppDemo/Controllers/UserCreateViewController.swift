@@ -14,6 +14,8 @@ class UserCreateViewController: UIViewController {
         table.register(EditUserTableViewCell.self, forCellReuseIdentifier: EditUserTableViewCell.identifier)
         return table
     }()
+    
+    private var newUser: User?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -64,7 +66,7 @@ class UserCreateViewController: UIViewController {
 
 }
 
-extension UserCreateViewController: UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
+extension UserCreateViewController: UITableViewDelegate, UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
         return 3
     }
@@ -101,12 +103,98 @@ extension UserCreateViewController: UITableViewDelegate, UITableViewDataSource, 
         guard let cell = tableView.dequeueReusableCell(withIdentifier: EditUserTableViewCell.identifier, for: indexPath) as? EditUserTableViewCell else {
             return UITableViewCell()
         }
+        let textInput: TextField = TextField()
+        textInput.delegate = self
+        textInput.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
+        
         cell.contentView.isUserInteractionEnabled = false
+        switch indexPath.section {
+        case 0:
+            switch indexPath.row {
+            case 0: textInput.placeholder = "ID"; textInput.isEnabled = false
+            case 1: textInput.placeholder = "Name"
+            case 2: textInput.placeholder = "Username"
+            case 3: textInput.placeholder = "Email"
+            case 4: textInput.placeholder = "Phone"
+            default: textInput.placeholder = ""
+        }
+        case 1:
+            switch indexPath.row {
+            case 0: textInput.placeholder = "Company"
+            case 1: textInput.placeholder = "Catchphrase"
+            case 2: textInput.placeholder = "BS"
+            default: textInput.placeholder = ""
+        }
+        case 2:
+            switch indexPath.row {
+            case 0: textInput.placeholder = "Street"
+            case 1: textInput.placeholder = "Suite"
+            case 2: textInput.placeholder = "City"
+            case 3: textInput.placeholder = "Zipcode"
+            default: textInput.placeholder = ""
+            }
+        default: textInput.placeholder = ""
+        }
+        
+        textInput.section = indexPath.section
+        textInput.row = indexPath.row
+        
+        cell.addSubview(textInput)
+        textInput.frame = cell.bounds
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+}
+
+extension UserCreateViewController: UITextFieldDelegate {
+    @objc func textFieldDidChange(_ textField: TextField) {
+        switch (textField.section) {
+        case 0: // User Information
+            switch (textField.row) {
+            case 0: break // this is ID, which we can't write to
+            case 1: newUser?.name = textField.text ?? ""
+            case 2: newUser?.username = textField.text ?? ""
+            case 3: newUser?.email = textField.text ?? ""
+            case 4: newUser?.phone = textField.text ?? ""
+            default: break
+            }
+        case 1: // Company Information
+            switch (textField.row) {
+            case 0: newUser?.company?.name = textField.text ?? ""
+            case 1: newUser?.company?.catchPhrase = textField.text ?? ""
+            case 2: newUser?.company?.bs = textField.text ?? ""
+            default: break
+            }
+        case 2: // Address Information
+            switch (textField.row) {
+            case 0: newUser?.address?.street = textField.text ?? ""
+            case 1: newUser?.address?.suite = textField.text ?? ""
+            case 2: newUser?.address?.city = textField.text ?? ""
+            case 3: newUser?.address?.zipcode = textField.text ?? ""
+            default: break
+            }
+        default: break
+        }
+    }
+    
+    class TextField: UITextField {
+        var section: Int?
+        var row: Int?
+        
+        override func textRect(forBounds bounds: CGRect) -> CGRect {
+            return bounds.insetBy(dx: 24, dy: 0)
+        }
+        
+        override func editingRect(forBounds bounds: CGRect) -> CGRect {
+            return bounds.insetBy(dx: 24, dy: 0)
+        }
+        
+        override var intrinsicContentSize: CGSize {
+            return .init(width: 0, height: 44)
+        }
     }
 }

@@ -35,9 +35,9 @@ class EditUserTableViewCell: UITableViewCell, UITextFieldDelegate {
     
     override init (style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        addSubview(nameInput)
-        nameInput.delegate = self
-        nameInput.frame = bounds
+//        addSubview(nameInput)
+//        nameInput.delegate = self
+//        nameInput.frame = bounds
     }
     
     required init?(coder: NSCoder) {
