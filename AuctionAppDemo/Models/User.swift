@@ -8,31 +8,38 @@
 import Foundation
 
 struct Geo: Codable {
-    let lat: String?
-    let lng: String?
+    var lat: String?
+    var lng: String?
 }
 
 struct Address: Codable {
-    let city: String?
-    let geo: Geo?
-    let street: String?
-    let suite: String?
-    let zipcode: String?
+    var city: String?
+    var geo: Geo?
+    var street: String?
+    var suite: String?
+    var zipcode: String?
 }
 
 struct Company: Codable {
-    let bs: String?
-    let catchPhrase: String?
-    let name: String?
+    var bs: String?
+    var catchPhrase: String?
+    var name: String?
 }
 
 struct User: Codable {
-    let address: Address?
-    let company: Company?
-    let email: String?
-    let id: Int
-    let name: String?
-    let phone: String?
-    let username: String?
-    let website: String?
+    var address: Address?
+    var company: Company?
+    var email: String?
+    var id: Int
+    var name: String?
+    var phone: String?
+    var username: String?
+    var website: String?
+}
+
+func emptyUser() -> User {
+    return User(address: Address(city: nil, geo: Geo(lat: nil, lng: nil),
+                                 street: nil, suite: nil, zipcode: nil),
+                company: Company(bs: nil, catchPhrase: nil, name: nil),
+                email: nil, id: 0, name: nil, phone: nil, username: nil, website: nil)
 }

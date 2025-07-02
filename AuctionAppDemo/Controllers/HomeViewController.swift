@@ -56,9 +56,7 @@ class HomeViewController: UIViewController {
     }
     
     @objc func addButtonPressed() {
-        print("button pressed")
-        let viewController = UserDetailViewController()
-        viewController.user = users[0]
+        let viewController = UserCreateViewController()
         navigationController?.pushViewController(viewController, animated: true)
     }
     
