@@ -62,7 +62,7 @@ class HomeViewController: UIViewController {
     
     
     private func getUserList() {
-        DataPersistenceManager.shared.fetchUsers { results in
+        DataPersistenceManager.shared.fetchDownloadedUsers { results in
             switch results {
             case .success(let _users):
                 DispatchQueue.main.async { [weak self] in
@@ -83,7 +83,7 @@ class HomeViewController: UIViewController {
                     DispatchQueue.main.async { [weak self] in
                         self?.users = _users
                         self?.homeUsersTableView.reloadData()
-                        DataPersistenceManager.shared.saveUsers(_users) { result in
+                        DataPersistenceManager.shared.saveDownloadedUsers(_users) { result in
                             switch result {
                             case .success(()):
                                 print("Users saved successfully")

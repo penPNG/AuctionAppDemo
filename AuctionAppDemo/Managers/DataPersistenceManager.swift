@@ -12,7 +12,7 @@ import CoreData
 class DataPersistenceManager {
     static let shared = DataPersistenceManager()
     
-    func saveUsers(_ users: [User], completion: @escaping (Result<Void, Error>) -> Void) {
+    func saveDownloadedUsers(_ users: [User], completion: @escaping (Result<Void, Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
@@ -21,7 +21,7 @@ class DataPersistenceManager {
         
         // we need to compare the stored data against the new data, primitively for now
         // if the new list is different (and valid, TODO) overwrite the old data.
-        fetchUsers { result in
+        fetchDownloadedUsers { result in
             switch result {
             case .success(let oldUsers):
                 if !self.compareUserLists(oldUsers, compareTo: users) {
@@ -46,7 +46,7 @@ class DataPersistenceManager {
         }
     }
     
-    func fetchUsers(completion: @escaping (Result<[UserEntity], Error>) -> Void) {
+    func fetchDownloadedUsers(completion: @escaping (Result<[UserEntity], Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
