@@ -95,7 +95,7 @@ class DataPersistenceManager {
         }
     }
     
-    func fetchCreatedUsers(completion: @escaping (Result<[UserEntity], Error>) -> Void) {
+    func fetchCreatedUsers(completion: @escaping (Result<[CreatedUserEntity], Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
@@ -103,7 +103,7 @@ class DataPersistenceManager {
         let context = appDelegate.persistentContainer.viewContext
         
         let request: NSFetchRequest<CreatedUserEntity> = CreatedUserEntity.fetchRequest()
-        var createdUsers: [UserEntity] = []
+        var createdUsers: [CreatedUserEntity] = []
         
         do {
             let createdUserEntities = try context.fetch(request)
