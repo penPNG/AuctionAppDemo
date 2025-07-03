@@ -46,6 +46,31 @@ class DataPersistenceManager {
         }
     }
     
+    func saveCreatedUser(_ user: User, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("Could not get AppDelegate")
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        
+        fetchCreatedUsers { Result in
+            switch Result {
+            case .success(let createdUsers):
+                var createdUserEntity = self.wrapUser(from: user, with: context) as! CreatedUserEntity
+                createdUserEntity.localID = Int64(createdUsers.count)
+                do {
+                    try context.save()
+                    completion(.success(()))
+                } catch {
+                    print(error.localizedDescription)
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
     func fetchDownloadedUsers(completion: @escaping (Result<[UserEntity], Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
@@ -65,6 +90,56 @@ class DataPersistenceManager {
                 users.append(userEntity)
             }
             completion(.success(users))
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    func fetchCreatedUsers(completion: @escaping (Result<[UserEntity], Error>) -> Void) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("Could not get AppDelegate")
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        
+        let request: NSFetchRequest<CreatedUserEntity> = CreatedUserEntity.fetchRequest()
+        var createdUsers: [UserEntity] = []
+        
+        do {
+            let createdUserEntities = try context.fetch(request)
+            print(createdUserEntities.count)
+            
+            for createdUserEntity in createdUserEntities {
+                createdUsers.append(createdUserEntity)
+            }
+            completion(.success(createdUsers))
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    // The biggest problem with this implementation is that we're repurposing the .id value to refer to a
+    // localID. This requires blindly assigning a localID to the .id field when fetching. This also means
+    // being carefull to not delete a local user with a fetched user
+    
+    func deleteCreatedUser(with user: User, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("Could not get AppDelegate")
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        
+        let request: NSFetchRequest<CreatedUserEntity> = CreatedUserEntity.fetchRequest()
+        
+        do {
+            let createdUserEntities = try context.fetch(request)
+            for createdUserEntity in createdUserEntities {
+                if createdUserEntity.localID == user.id {
+                    context.delete(createdUserEntity)
+                    completion(.success(()))
+                }
+            }
+            
         } catch {
             completion(.failure(error))
         }
@@ -96,7 +171,9 @@ class DataPersistenceManager {
 //            print(error.localizedDescription)
 //        }
 //    }
+}
     
+extension DataPersistenceManager {
     // entity casting
     private func wrapUser(from user: User, with context: NSManagedObjectContext) -> UserEntity {
         let entity = UserEntity(context: context)
