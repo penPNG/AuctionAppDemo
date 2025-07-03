@@ -10,6 +10,7 @@ import UIKit
 class HomeViewController: UIViewController {
     
     private var users: [User] = [User]()
+    private var createdUsers: [User] = [User]()
     var connected: Bool = false
     var networkMonitor: NetworkMonitor!
     
@@ -75,6 +76,23 @@ class HomeViewController: UIViewController {
                 print(error)
             }
         }
+        
+        DataPersistenceManager.shared.fetchCreatedUsers { results in
+            switch results {
+            case .success(let _createdUsers):
+                DispatchQueue.main.async { [weak self] in
+                    for _createdUser in _createdUsers {
+                        var createdUser = DataPersistenceManager.shared.unwrapUser(from: _createdUser)
+                        createdUser.id = Int(_createdUser.localID)
+                        self?.createdUsers.append(createdUser)
+                    }
+                    self?.homeUsersTableView.reloadData()
+                }
+            case .failure(let error):
+                print(error)
+            }
+        }
+        
         if self.users.count > 0 { return }
         if networkMonitor.isReachable {
             APICaller.shared.getUsers { results in
@@ -103,12 +121,36 @@ class HomeViewController: UIViewController {
 
 extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if users.count == 0 {
-            tableView.setEmptyView(title: "No Users Found", message: "No Internet Connection")
-        } else {
-            tableView.restoreView()
+        switch section {
+        case 0:
+            if users.count == 0 {
+                // This will cause a bug to be fixed!
+                tableView.setEmptyView(title: "No Users Found", message: "No Internet Connection")
+            } else {
+                tableView.restoreView()
+            }
+            return users.count
+        case 1:
+            return createdUsers.count
+        default: return 0
         }
-        return users.count
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        switch section {
+        case 0:
+            if users.count == 0 {
+                return nil
+            }
+            return "Users"
+        case 1:
+            if createdUsers.count == 0 {
+                return nil
+            }
+            return "Unsynced Users"
+        default:
+            return nil
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
