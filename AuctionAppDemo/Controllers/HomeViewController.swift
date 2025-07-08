@@ -80,6 +80,7 @@ class HomeViewController: UIViewController {
         DataPersistenceManager.shared.fetchCreatedUsers { results in
             switch results {
             case .success(let _createdUsers):
+                
                 DispatchQueue.main.async { [weak self] in
                     for _createdUser in _createdUsers {
                         var createdUser = DataPersistenceManager.shared.unwrapCreatedUser(from: _createdUser)
@@ -103,10 +104,9 @@ class HomeViewController: UIViewController {
                         self?.homeUsersTableView.reloadData()
                         DataPersistenceManager.shared.saveDownloadedUsers(_users) { result in
                             switch result {
-                            case .success(()):
-                                print("Users saved successfully")
+                            case .success(()): break
                             case .failure(let error):
-                                print("Error saving settings: \(error)")
+                                print("Error saving users: \(error)")
                             }
                         }
                     }
@@ -120,6 +120,10 @@ class HomeViewController: UIViewController {
 }
 
 extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 2
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0:
@@ -158,7 +162,11 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             return UITableViewCell()
         }
         var content = cell.defaultContentConfiguration( )
-        content.text = self.users[indexPath.row].name
+        switch indexPath.section {
+        case 0: content.text = self.users[indexPath.row].name
+        case 1: content.text = self.createdUsers[indexPath.row].name
+        default: content.text = ""
+        }
         content.image = UIImage(systemName: "person.circle")
         
         cell.contentConfiguration = content
@@ -167,7 +175,12 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedUser = users[indexPath.row]
+        var selectedUser: User!
+        switch indexPath.section {
+        case 0: selectedUser = users[indexPath.row]
+        case 1: selectedUser = createdUsers[indexPath.row]
+        default: selectedUser = emptyUser()
+        }
         
         let viewController = UserDetailViewController()
         viewController.user = selectedUser
@@ -179,6 +192,29 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
         if let selectedPath = homeUsersTableView.indexPathForSelectedRow {
             homeUsersTableView.deselectRow(at: selectedPath, animated: true)
         }
+        
+        DataPersistenceManager.shared.fetchCreatedUsers { results in
+            switch results {
+            case .success(let _createdUsers):
+                
+                DispatchQueue.main.async { [weak self] in
+                    self?.createdUsers.removeAll()  // The placement of this line caused an infuriating bug, but it's okay now
+                    
+                    for _createdUser in _createdUsers {
+                        print("\(_createdUsers.count) viewWillAppear new users")
+                        var createdUser = DataPersistenceManager.shared.unwrapCreatedUser(from: _createdUser)
+                        createdUser.id = Int(_createdUser.id)
+                        self?.createdUsers.append(createdUser)
+                    }
+                    self?.homeUsersTableView.reloadData()
+                }
+            
+            case .failure(let error):
+                print(error)
+            }
+        }
+        
+        
     }
 }
 
