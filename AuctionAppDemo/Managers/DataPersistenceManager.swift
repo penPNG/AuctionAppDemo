@@ -24,7 +24,7 @@ class DataPersistenceManager {
         fetchDownloadedUsers { result in
             switch result {
             case .success(let oldUsers):
-                if !self.compareUserLists(oldUsers, compareTo: users) {
+                if !DataPersistenceManager.compareUserLists(oldUsers, compareTo: users) {
                     for user in oldUsers {
                         context.delete(user)
                     }
@@ -56,8 +56,8 @@ class DataPersistenceManager {
         fetchCreatedUsers { Result in
             switch Result {
             case .success(let createdUsers):
-                var createdUserEntity = self.wrapUser(from: user, with: context) as! CreatedUserEntity
-                createdUserEntity.localID = Int64(createdUsers.count)
+                let createdUserEntity = self.castUserEntityToCreatedUserEntity(from: self.wrapUser(from: user, with: context), with: context) 
+                createdUserEntity.id = Int64(createdUsers.count)
                 do {
                     try context.save()
                     completion(.success(()))
@@ -83,10 +83,11 @@ class DataPersistenceManager {
         
         do {
             let userEntities = try context.fetch(request)
-            print(userEntities.count)
+            print("\(userEntities.count) users")
             
             for userEntity in userEntities {
                 // This is known as overhead! It's a good thing this isn't a performant part of the app
+                print("fetched \(userEntity.name ?? "no name")")
                 users.append(userEntity)
             }
             completion(.success(users))
@@ -107,13 +108,14 @@ class DataPersistenceManager {
         
         do {
             let createdUserEntities = try context.fetch(request)
-            print(createdUserEntities.count)
+            print("\(createdUserEntities.count) new users")
             
             for createdUserEntity in createdUserEntities {
                 createdUsers.append(createdUserEntity)
             }
             completion(.success(createdUsers))
         } catch {
+            print("failed")
             completion(.failure(error))
         }
     }
@@ -134,7 +136,7 @@ class DataPersistenceManager {
         do {
             let createdUserEntities = try context.fetch(request)
             for createdUserEntity in createdUserEntities {
-                if createdUserEntity.localID == user.id {
+                if createdUserEntity.id == user.id {
                     context.delete(createdUserEntity)
                     completion(.success(()))
                 }
@@ -193,6 +195,10 @@ extension DataPersistenceManager {
         entity.username = user.username
         entity.website = user.website
         
+        #if DEBUG
+        print("Successfully cast \(entity.name ?? "") from User")
+        #endif
+        
         return entity
     }
     
@@ -208,8 +214,62 @@ extension DataPersistenceManager {
         return newUser
     }
     
+    func unwrapCreatedUser(from user: CreatedUserEntity) -> User {
+        let newUser = User(address: Address(city: user.address_city,
+                                            geo: Geo(lat: user.address_geo_lat, lng: user.address_geo_lng),
+                                            street: user.address_street, suite: user.address_suite,
+                                            zipcode: user.address_zipcode),
+                           company: Company(bs: user.company_bs, catchPhrase: user.company_catchPhrase,
+                                            name: user.company_name),
+                           email: user.email, id: Int(user.id), name: user.name, phone: user.phone,
+                           username: user.username, website: user.website)
+        return newUser
+    }
+    
+    func castUserEntityToCreatedUserEntity(from user: UserEntity, with context: NSManagedObjectContext) -> CreatedUserEntity {
+        let entity = CreatedUserEntity(context: context)
+        entity.address_city = user.address_city
+        entity.address_geo_lat = user.address_geo_lat
+        entity.address_geo_lng = user.address_geo_lng
+        entity.address_street = user.address_street
+        entity.address_suite = user.address_suite
+        entity.address_zipcode = user.address_zipcode
+        entity.company_bs = user.company_bs
+        entity.company_catchPhrase = user.company_catchPhrase
+        entity.company_name = user.company_name
+        entity.email = user.email
+        entity.id = Int64(user.id)
+        entity.name = user.name
+        entity.phone = user.phone
+        entity.username = user.username
+        entity.website = user.website
+        
+        #if DEBUG
+        print("successfully cast \(entity.name ?? "") from UserEntity")
+        #endif
+        
+        return entity
+    }
+    
     // Returns true if the lists are equivalent
-    private func compareUserLists(_ oldList: [UserEntity], compareTo newList: [User]) -> Bool {
+    static func compareUserLists(_ oldList: [UserEntity], compareTo newList: [User]) -> Bool {
+        var isEqual = true
+        
+        if oldList.count != newList.count {
+            isEqual = false
+        } else {
+            for (index, user) in oldList.enumerated() {
+                if user.id != newList[index].id {
+                    isEqual = false
+                    break
+                }
+            }
+        }
+        
+        return isEqual
+    }
+    
+    static func compareUserLists(_ oldList: [CreatedUserEntity], compareTo newList: [User]) -> Bool {
         var isEqual = true
         
         if oldList.count != newList.count {

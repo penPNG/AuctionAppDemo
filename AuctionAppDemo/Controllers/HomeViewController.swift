@@ -82,8 +82,8 @@ class HomeViewController: UIViewController {
             case .success(let _createdUsers):
                 DispatchQueue.main.async { [weak self] in
                     for _createdUser in _createdUsers {
-                        var createdUser = DataPersistenceManager.shared.unwrapUser(from: _createdUser)
-                        createdUser.id = Int(_createdUser.localID)
+                        var createdUser = DataPersistenceManager.shared.unwrapCreatedUser(from: _createdUser)
+                        createdUser.id = Int(_createdUser.id)
                         self?.createdUsers.append(createdUser)
                     }
                     self?.homeUsersTableView.reloadData()
