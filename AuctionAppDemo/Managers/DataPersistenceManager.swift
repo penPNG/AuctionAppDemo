@@ -124,7 +124,7 @@ class DataPersistenceManager {
     // localID. This requires blindly assigning a localID to the .id field when fetching. This also means
     // being carefull to not delete a local user with a fetched user
     
-    func deleteCreatedUser(with user: User, completion: @escaping (Result<Void, Error>) -> Void) {
+    func deleteCreatedUser(at createdUserID: Int, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
@@ -136,8 +136,10 @@ class DataPersistenceManager {
         do {
             let createdUserEntities = try context.fetch(request)
             for createdUserEntity in createdUserEntities {
-                if createdUserEntity.id == user.id {
+                if createdUserEntity.id == createdUserID {
                     context.delete(createdUserEntity)
+                    try context.save()
+                    print("deleted \(createdUserEntity.name ?? "") at \(createdUserID)")
                     completion(.success(()))
                 }
             }
