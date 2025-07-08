@@ -19,9 +19,6 @@ class APICaller {
             return
         }
         
-        #if DEBUG
-        print("before")
-        #endif
         let task = URLSession.shared.dataTask(with: URLRequest(url: url)) { data, _, error in
             #if DEBUG
             print(error?.localizedDescription ?? "")
