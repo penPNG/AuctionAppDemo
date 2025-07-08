@@ -197,16 +197,20 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        var selectedUser: User!
         switch indexPath.section {
-        case 0: selectedUser = users[indexPath.row]
-        case 1: selectedUser = createdUsers[indexPath.row]
-        default: selectedUser = emptyUser()
+        case 0:
+            let viewController = UserDetailViewController()
+            viewController.user = users[indexPath.row]
+            navigationController?.pushViewController(viewController, animated: true)
+        case 1:
+            let viewController = UserCreateViewController()
+            viewController.userToEdit = createdUsers[indexPath.row]
+            navigationController?.pushViewController(viewController, animated: true)
+        default:
+            let viewController = UserDetailViewController()
+            viewController.user = emptyUser()
+            navigationController?.pushViewController(viewController, animated: true)
         }
-        
-        let viewController = UserDetailViewController()
-        viewController.user = selectedUser
-        navigationController?.pushViewController(viewController, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {

@@ -15,16 +15,23 @@ class UserCreateViewController: UIViewController {
         return table
     }()
     
-    private var newUser: User?
+    private var newUser: User = emptyUser()
+    private var editingUser: Bool = false
+    var userToEdit: User?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        newUser = emptyUser()
+        if userToEdit != nil {
+            navigationItem.title = "Edit User"
+            newUser = userToEdit!   // I really don't want to rewrite some of the code below
+            editingUser = true
+        } else {
+            navigationItem.title = "Add User"
+        }
         
         view.backgroundColor = .systemBackground
         view.addSubview(editUserTableView)
-        navigationItem.title = "Add User"
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(saveUser))
         
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
@@ -42,7 +49,7 @@ class UserCreateViewController: UIViewController {
     
     // TODO figure out how alerts work, saving blank data is dangerous
     @objc func saveUser() {
-        DataPersistenceManager.shared.saveCreatedUser(newUser!) { result in
+        DataPersistenceManager.shared.saveCreatedUser(newUser) { result in
             switch result {
             case .success(()):
                 #if DEBUG
@@ -54,7 +61,7 @@ class UserCreateViewController: UIViewController {
                 #endif
             }
         }
-        print(newUser!)
+        print(newUser)
     }
     
     @objc func keyboardWillShow(_ notification: Notification) {
@@ -125,25 +132,37 @@ extension UserCreateViewController: UITableViewDelegate, UITableViewDataSource {
         case 0:
             switch indexPath.row {
             case 0: textInput.placeholder = "ID"; textInput.isEnabled = false
+                if editingUser { textInput.text = "\(self.userToEdit?.id ?? 0)" }
             case 1: textInput.placeholder = "Name"
+                if editingUser { textInput.text = "\(self.userToEdit?.name ?? "")" }
             case 2: textInput.placeholder = "Username"
+                if editingUser { textInput.text = "\(self.userToEdit?.username ?? "")" }
             case 3: textInput.placeholder = "Email"
+                if editingUser { textInput.text = "\(self.userToEdit?.email ?? "")" }
             case 4: textInput.placeholder = "Phone"
+                if editingUser { textInput.text = "\(self.userToEdit?.phone ?? "")" }
             default: textInput.placeholder = ""
         }
         case 1:
             switch indexPath.row {
             case 0: textInput.placeholder = "Company"
+                if editingUser { textInput.text = "\(self.userToEdit?.company?.name ?? "")" }
             case 1: textInput.placeholder = "Catchphrase"
+                if editingUser { textInput.text = "\(self.userToEdit?.company?.catchPhrase ?? "")" }
             case 2: textInput.placeholder = "BS"
+                if editingUser { textInput.text = "\(self.userToEdit?.company?.bs ?? "")" }
             default: textInput.placeholder = ""
         }
         case 2:
             switch indexPath.row {
             case 0: textInput.placeholder = "Street"
+                if editingUser { textInput.text = "\(self.userToEdit?.address?.street ?? "")" }
             case 1: textInput.placeholder = "Suite"
+                if editingUser { textInput.text = "\(self.userToEdit?.address?.suite ?? "")" }
             case 2: textInput.placeholder = "City"
+                if editingUser { textInput.text = "\(self.userToEdit?.address?.city ?? "")" }
             case 3: textInput.placeholder = "Zipcode"
+                if editingUser { textInput.text = "\(self.userToEdit?.address?.zipcode ?? "")" }
             default: textInput.placeholder = ""
             }
         default: textInput.placeholder = ""
@@ -169,25 +188,25 @@ extension UserCreateViewController: UITextFieldDelegate {
         case 0: // User Information
             switch (textField.row) {
             case 0: break // this is ID, which we can't write to
-            case 1: newUser?.name = textField.text ?? ""
-            case 2: newUser?.username = textField.text ?? ""
-            case 3: newUser?.email = textField.text ?? ""
-            case 4: newUser?.phone = textField.text ?? ""
+            case 1: newUser.name = textField.text ?? ""
+            case 2: newUser.username = textField.text ?? ""
+            case 3: newUser.email = textField.text ?? ""
+            case 4: newUser.phone = textField.text ?? ""
             default: break
             }
         case 1: // Company Information
             switch (textField.row) {
-            case 0: newUser?.company?.name = textField.text ?? ""
-            case 1: newUser?.company?.catchPhrase = textField.text ?? ""
-            case 2: newUser?.company?.bs = textField.text ?? ""
+            case 0: newUser.company?.name = textField.text ?? ""
+            case 1: newUser.company?.catchPhrase = textField.text ?? ""
+            case 2: newUser.company?.bs = textField.text ?? ""
             default: break
             }
         case 2: // Address Information
             switch (textField.row) {
-            case 0: newUser?.address?.street = textField.text ?? ""
-            case 1: newUser?.address?.suite = textField.text ?? ""
-            case 2: newUser?.address?.city = textField.text ?? ""
-            case 3: newUser?.address?.zipcode = textField.text ?? ""
+            case 0: newUser.address?.street = textField.text ?? ""
+            case 1: newUser.address?.suite = textField.text ?? ""
+            case 2: newUser.address?.city = textField.text ?? ""
+            case 3: newUser.address?.zipcode = textField.text ?? ""
             default: break
             }
         default: break
