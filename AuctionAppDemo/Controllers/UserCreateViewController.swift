@@ -49,19 +49,35 @@ class UserCreateViewController: UIViewController {
     
     // TODO figure out how alerts work, saving blank data is dangerous
     @objc func saveUser() {
-        DataPersistenceManager.shared.saveCreatedUser(newUser) { result in
-            switch result {
-            case .success(()):
-                #if DEBUG
-                print("New user saved successfully")
-                #endif
-            case .failure(let error):
-                #if DEBUG
-                print("Failed to save new user: \(error)")
-                #endif
+        if !editingUser {
+            DataPersistenceManager.shared.saveCreatedUser(newUser) { result in
+                switch result {
+                case .success(()):
+#if DEBUG
+                    print("New user saved successfully")
+#endif
+                case .failure(let error):
+#if DEBUG
+                    print("Failed to save new user: \(error)")
+#endif
+                }
+            }
+        } else {
+            DataPersistenceManager.shared.updateEditedUser(with: newUser) { result in
+                switch result {
+                case .success(()):
+#if DEBUG
+                    print("New user saved successfully")
+#endif
+                case .failure(let error):
+#if DEBUG
+                    print("Failed to save new user: \(error)")
+#endif
+                }
             }
         }
-        print(newUser)
+        
+        navigationController?.popViewController(animated: true)
     }
     
     @objc func keyboardWillShow(_ notification: Notification) {
