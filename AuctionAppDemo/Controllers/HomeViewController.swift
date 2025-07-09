@@ -232,6 +232,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
                         createdUser.id = Int(_createdUser.id)
                         self?.createdUsers.append(createdUser)
                     }
+                    self?.createdUsers = (self?.createdUsers.sorted(by: { $0.id < $1.id }))!
                     self?.homeUsersTableView.reloadData()
                 }
             
