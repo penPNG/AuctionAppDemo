@@ -17,6 +17,7 @@ class UserCreateViewController: UIViewController {
     
     private var newUser: User = emptyUser()
     private var editingUser: Bool = false
+    private var allValid: Bool = false
     var userToEdit: User?
 
     override func viewDidLoad() {
@@ -47,7 +48,7 @@ class UserCreateViewController: UIViewController {
         editUserTableView.sectionHeaderHeight = 24
     }
     
-    // TODO figure out how alerts work, saving blank data is dangerous
+    // TODO: figure out how alerts work, saving blank data is dangerous
     @objc func saveUser() {
         if !editingUser {
             DataPersistenceManager.shared.saveCreatedUser(newUser) { result in

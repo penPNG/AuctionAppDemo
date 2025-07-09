@@ -31,7 +31,6 @@ class APICaller {
             }
             
             do {
-                //let results = try JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed)
                 let results = try JSONDecoder().decode([User].self, from: data)
                 completion(.success(results))
             } catch {
@@ -43,5 +42,10 @@ class APICaller {
         }
         
         task.resume()
+    }
+    
+    // TODO: Implement API push
+    func push(users: [User], completion: @escaping (Result<Void, Error>) -> Void) {
+        
     }
 }
