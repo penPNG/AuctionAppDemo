@@ -149,6 +149,28 @@ class DataPersistenceManager {
         }
     }
     
+    func updateEditedUser(with editedUser: User, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("Could not get AppDelegate")
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        let request: NSFetchRequest<CreatedUserEntity> = CreatedUserEntity.fetchRequest()
+        
+        do {
+            let createdUserEntities = try context.fetch(request)
+            for createdUserEntity in createdUserEntities {
+                if createdUserEntity.id == editedUser.id {
+                    context.delete(createdUserEntity)
+                    let editedUserEntity = wrapCreatedUser(from: editedUser, with: context)
+                    try context.save()
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
     // Reference for data saving
     
 //        let settingsData: SettingsData = .init(showAddress: sender.isOn)
@@ -181,6 +203,31 @@ extension DataPersistenceManager {
     // entity casting
     private func wrapUser(from user: User, with context: NSManagedObjectContext) -> UserEntity {
         let entity = UserEntity(context: context)
+        entity.address_city = user.address?.city
+        entity.address_geo_lat = user.address?.geo?.lat
+        entity.address_geo_lng = user.address?.geo?.lng
+        entity.address_street = user.address?.street
+        entity.address_suite = user.address?.suite
+        entity.address_zipcode = user.address?.zipcode
+        entity.company_bs = user.company?.bs
+        entity.company_catchPhrase = user.company?.catchPhrase
+        entity.company_name = user.company?.name
+        entity.email = user.email
+        entity.id = Int64(user.id)
+        entity.name = user.name
+        entity.phone = user.phone
+        entity.username = user.username
+        entity.website = user.website
+        
+        #if DEBUG
+        print("Successfully cast \(entity.name ?? "") from User")
+        #endif
+        
+        return entity
+    }
+    
+    private func wrapCreatedUser(from user: User, with context: NSManagedObjectContext) -> CreatedUserEntity {
+        let entity = CreatedUserEntity(context: context)
         entity.address_city = user.address?.city
         entity.address_geo_lat = user.address?.geo?.lat
         entity.address_geo_lng = user.address?.geo?.lng
