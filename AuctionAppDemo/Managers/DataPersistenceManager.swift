@@ -57,6 +57,8 @@ class DataPersistenceManager {
             switch Result {
             case .success(let createdUsers):
                 let unsyncedUserEntity = self.wrapUnsyncedUser(from: user, with: context)
+                // This causes conflicts with existing IDs for now, but editing and deletion are unaffected
+                // TODO: more robust ID designation
                 unsyncedUserEntity.id = Int64(createdUsers.count)
                 do {
                     try context.save()
@@ -126,11 +128,11 @@ class DataPersistenceManager {
         
         do {
             let userEntities = try context.fetch(request)
-            print("\(userEntities.count) users")
+            #if DEBUG_FETCH
+            print("Fetching \(userEntities.count) users")
+            #endif
             
             for userEntity in userEntities {
-                // This is known as overhead! It's a good thing this isn't a performant part of the app
-                print("fetched \(userEntity.name ?? "no name")")
                 users.append(userEntity)
             }
             completion(.success(users))
@@ -239,7 +241,7 @@ extension DataPersistenceManager {
         entity.username = user.username
         entity.website = user.website
         
-        #if DEBUG
+        #if DEBUG_CAST
         print("Successfully cast \(entity.name ?? "") from User")
         #endif
         
@@ -264,7 +266,7 @@ extension DataPersistenceManager {
         entity.username = user.username
         entity.website = user.website
         
-        #if DEBUG
+        #if DEBUG_CAST
         print("Successfully cast \(entity.name ?? "") from User")
         #endif
         
@@ -280,6 +282,9 @@ extension DataPersistenceManager {
                                             name: user.company_name),
                            email: user.email, id: Int(user.id), name: user.name, phone: user.phone,
                            username: user.username, website: user.website)
+        #if DEBUG_CAST
+        print("Successfully cast \(newUser.name ?? "") to User")
+        #endif
         return newUser
     }
     
@@ -292,6 +297,9 @@ extension DataPersistenceManager {
                                             name: user.company_name),
                            email: user.email, id: Int(user.id), name: user.name, phone: user.phone,
                            username: user.username, website: user.website)
+        #if DEBUG_CAST
+        print("Successfully cast \(newUser.name ?? "") to User")
+        #endif
         return newUser
     }
     
@@ -313,7 +321,7 @@ extension DataPersistenceManager {
         entity.username = user.username
         entity.website = user.website
         
-        #if DEBUG
+        #if DEBUG_CAST
         print("successfully cast \(entity.name ?? "") from UserEntity")
         #endif
         
