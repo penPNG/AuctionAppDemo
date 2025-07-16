@@ -195,6 +195,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
                 }
             }
         }
+        homeUsersTableView.reloadData()
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
