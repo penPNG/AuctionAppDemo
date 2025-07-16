@@ -167,7 +167,7 @@ class DataPersistenceManager {
     // localID. This requires blindly assigning a localID to the .id field when fetching. This also means
     // being carefull to not delete a local user with a fetched user
     
-    func deleteUnsyncedUser(at createdUserID: Int, completion: @escaping (Result<Void, Error>) -> Void) {
+    func deleteUnsyncedUser(at unsyncedUserPosition: Int, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
@@ -177,15 +177,12 @@ class DataPersistenceManager {
         let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
         
         do {
-            let createdUserEntities = try context.fetch(request)
-            for unsyncedUserEntity in createdUserEntities {
-                if unsyncedUserEntity.id == createdUserID {
-                    context.delete(unsyncedUserEntity)
-                    try context.save()
-                    print("deleted \(unsyncedUserEntity.name ?? "") at \(createdUserID)")
-                    completion(.success(()))
-                }
-            }
+            let unsyncedUserEntities = try context.fetch(request)
+            print("Deleting \(unsyncedUserEntities[unsyncedUserPosition].name ?? "user") at \(unsyncedUserPosition)")
+            context.delete(unsyncedUserEntities[unsyncedUserPosition])
+            try context.save()
+            print("Success")
+            completion(.success(()))
             
         } catch {
             completion(.failure(error))
