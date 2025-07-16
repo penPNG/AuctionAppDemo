@@ -64,7 +64,7 @@ class UserCreateViewController: UIViewController {
                 }
             }
         } else {
-            DataPersistenceManager.shared.updateEditedUser(with: newUser) { result in
+            DataPersistenceManager.shared.saveEditedUser(with: userToEdit!, isSynced: false) { result in
                 switch result {
                 case .success(()):
 #if DEBUG
