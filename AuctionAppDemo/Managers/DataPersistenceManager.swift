@@ -99,8 +99,8 @@ class DataPersistenceManager {
             let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
             
             do {
-                let createdUserEntities = try context.fetch(request)
-                for unsyncedUserEntity in createdUserEntities {
+                let unsyncedUserEntities = try context.fetch(request)
+                for unsyncedUserEntity in unsyncedUserEntities {
                     if unsyncedUserEntity.id == user.id {
                         context.delete(unsyncedUserEntity)
                         _ = wrapUnsyncedUser(from: user, with: context)
@@ -147,16 +147,18 @@ class DataPersistenceManager {
         let context = appDelegate.persistentContainer.viewContext
         
         let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
-        var createdUsers: [UnsyncedUserEntity] = []
+        var unsyncedUsers: [UnsyncedUserEntity] = []
         
         do {
-            let createdUserEntities = try context.fetch(request)
-            print("\(createdUserEntities.count) new users")
+            let unsyncedUserEntities = try context.fetch(request)
+            #if DEBUG_FETCH
+            print("Fetching \(userEntities.count) unsynced users")
+            #endif
             
-            for unsyncedUserEntity in createdUserEntities {
-                createdUsers.append(unsyncedUserEntity)
+            for unsyncedUserEntity in unsyncedUserEntities {
+                unsyncedUsers.append(unsyncedUserEntity)
             }
-            completion(.success(createdUsers))
+            completion(.success(unsyncedUsers))
         } catch {
             print("failed")
             completion(.failure(error))
