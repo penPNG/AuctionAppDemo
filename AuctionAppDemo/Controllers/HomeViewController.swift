@@ -219,6 +219,28 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             homeUsersTableView.deselectRow(at: selectedPath, animated: true)
         }
         
+        DataPersistenceManager.shared.fetchDownloadedUsers { results in
+            switch results {
+            case .success(let _downloadedUsers):
+                
+                DispatchQueue.main.async { [weak self] in
+                    self?.users.removeAll()  // The placement of this line caused an infuriating bug, but it's okay now
+                    
+                    print("\(_downloadedUsers.count) viewWillAppear users")
+                    for _downloadedUser in _downloadedUsers {
+                        var downloadedUser = DataPersistenceManager.shared.unwrapUser(from: _downloadedUser)
+                        downloadedUser.id = Int(_downloadedUser.id)
+                        self?.users.append(downloadedUser)
+                    }
+                    self?.users = (self?.users.sorted(by: { $0.id < $1.id }))!
+                    self?.homeUsersTableView.reloadData()
+                }
+            
+            case .failure(let error):
+                print(error)
+            }
+        }
+        
         DataPersistenceManager.shared.fetchUnsyncedUsers { results in
             switch results {
             case .success(let _createdUsers):
