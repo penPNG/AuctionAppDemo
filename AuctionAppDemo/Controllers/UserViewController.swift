@@ -27,6 +27,8 @@ class UserViewController: UIViewController {
         view.backgroundColor = .systemBackground
         view.addSubview(userTableView)
         
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(saveUser))
+        
         // Move the screen when a keyboard appears
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
@@ -49,6 +51,39 @@ class UserViewController: UIViewController {
     
     @objc func keyboardWillHide(_ notification: Notification) {
         userTableView.contentInset.bottom = 0
+    }
+    
+    // TODO: figure out how alerts work, saving blank data is dangerous
+    @objc func saveUser() {
+        if !isEditingUser {
+            DataPersistenceManager.shared.saveCreatedUser(workingUser) { result in
+                switch result {
+                case .success(()):
+                    #if DEBUG
+                    print("New user saved successfully")
+                    #endif
+                case .failure(let error):
+                    #if DEBUG
+                    print("Failed to save new user: \(error)")
+                    #endif
+                }
+            }
+        } else {
+            DataPersistenceManager.shared.saveEditedUser(with: workingUser, isSynced: isSyncedUser) { result in
+                switch result {
+                case .success(()):
+                    #if DEBUG
+                    print("Saved changes to \(self.workingUser.name ?? "user") successfully")
+                    #endif
+                case .failure(let error):
+                    #if DEBUG
+                    print("Failed to save new user: \(error)")
+                    #endif
+                }
+            }
+        }
+        
+        navigationController?.popViewController(animated: true)
     }
 
 }
