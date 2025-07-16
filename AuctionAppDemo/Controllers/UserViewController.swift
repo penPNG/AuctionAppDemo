@@ -18,6 +18,7 @@ class UserViewController: UIViewController {
     }()
     
     var workingUser = emptyUser()
+    var isSyncedUser: Bool = false
     var isEditingUser: Bool = true
 
     override func viewDidLoad() {

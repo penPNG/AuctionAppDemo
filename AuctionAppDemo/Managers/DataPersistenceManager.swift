@@ -53,11 +53,11 @@ class DataPersistenceManager {
         
         let context = appDelegate.persistentContainer.viewContext
         
-        fetchCreatedUsers { Result in
+        fetchUnsyncedUsers { Result in
             switch Result {
             case .success(let createdUsers):
-                let UnsyncedUserEntity = self.wrapUnsyncedUser(from: user, with: context)
-                UnsyncedUserEntity.id = Int64(createdUsers.count)
+                let unsyncedUserEntity = self.wrapUnsyncedUser(from: user, with: context)
+                unsyncedUserEntity.id = Int64(createdUsers.count)
                 do {
                     try context.save()
                     completion(.success(()))
@@ -71,27 +71,46 @@ class DataPersistenceManager {
         }
     }
     
-    func saveEditedUser(_ user: User, completion: @escaping (Result<Void, Error>) -> Void) {
+    func saveEditedUser(with user: User, isSynced synced: Bool, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
         
         let context = appDelegate.persistentContainer.viewContext
-        let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
         
-        do {
-            let createdUserEntities = try context.fetch(request)
-            for UnsyncedUserEntity in createdUserEntities {
-                if UnsyncedUserEntity.id == user.id {
-                    context.delete(UnsyncedUserEntity)
-                    let editedUserEntity = wrapUnsyncedUser(from: user, with: context)
-                    try context.save()
+        // I need to keep reminding myself that microperformance is not priority here
+        // because I almost over engineered this function for no good reason
+        if synced {
+            let request: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
+            
+            do {
+                let syncedUserEntities = try context.fetch(request)
+                for syncedUserEntity in syncedUserEntities {
+                    if syncedUserEntity.id == user.id {
+                        context.delete(syncedUserEntity)
+                        _ = wrapUnsyncedUser(from: user, with: context)
+                        try context.save()
+                    }
                 }
+            } catch {
+                completion(.failure(error))
             }
-        } catch {
-            completion(.failure(error))
+        } else {
+            let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
+            
+            do {
+                let createdUserEntities = try context.fetch(request)
+                for unsyncedUserEntity in createdUserEntities {
+                    if unsyncedUserEntity.id == user.id {
+                        context.delete(unsyncedUserEntity)
+                        _ = wrapUnsyncedUser(from: user, with: context)
+                        try context.save()
+                    }
+                }
+            } catch {
+                completion(.failure(error))
+            }
         }
-        
         
     }
     
@@ -120,7 +139,7 @@ class DataPersistenceManager {
         }
     }
     
-    func fetchCreatedUsers(completion: @escaping (Result<[UnsyncedUserEntity], Error>) -> Void) {
+    func fetchUnsyncedUsers(completion: @escaping (Result<[UnsyncedUserEntity], Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
@@ -134,8 +153,8 @@ class DataPersistenceManager {
             let createdUserEntities = try context.fetch(request)
             print("\(createdUserEntities.count) new users")
             
-            for UnsyncedUserEntity in createdUserEntities {
-                createdUsers.append(UnsyncedUserEntity)
+            for unsyncedUserEntity in createdUserEntities {
+                createdUsers.append(unsyncedUserEntity)
             }
             completion(.success(createdUsers))
         } catch {
@@ -148,7 +167,7 @@ class DataPersistenceManager {
     // localID. This requires blindly assigning a localID to the .id field when fetching. This also means
     // being carefull to not delete a local user with a fetched user
     
-    func deleteCreatedUser(at createdUserID: Int, completion: @escaping (Result<Void, Error>) -> Void) {
+    func deleteUnsyncedUser(at createdUserID: Int, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
@@ -159,37 +178,15 @@ class DataPersistenceManager {
         
         do {
             let createdUserEntities = try context.fetch(request)
-            for UnsyncedUserEntity in createdUserEntities {
-                if UnsyncedUserEntity.id == createdUserID {
-                    context.delete(UnsyncedUserEntity)
+            for unsyncedUserEntity in createdUserEntities {
+                if unsyncedUserEntity.id == createdUserID {
+                    context.delete(unsyncedUserEntity)
                     try context.save()
-                    print("deleted \(UnsyncedUserEntity.name ?? "") at \(createdUserID)")
+                    print("deleted \(unsyncedUserEntity.name ?? "") at \(createdUserID)")
                     completion(.success(()))
                 }
             }
             
-        } catch {
-            completion(.failure(error))
-        }
-    }
-    
-    func updateEditedUser(with editedUser: User, completion: @escaping (Result<Void, Error>) -> Void) {
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            fatalError("Could not get AppDelegate")
-        }
-        
-        let context = appDelegate.persistentContainer.viewContext
-        let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
-        
-        do {
-            let createdUserEntities = try context.fetch(request)
-            for UnsyncedUserEntity in createdUserEntities {
-                if UnsyncedUserEntity.id == editedUser.id {
-                    context.delete(UnsyncedUserEntity)
-                    let editedUserEntity = wrapUnsyncedUser(from: editedUser, with: context)
-                    try context.save()
-                }
-            }
         } catch {
             completion(.failure(error))
         }

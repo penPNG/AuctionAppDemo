@@ -78,7 +78,7 @@ class HomeViewController: UIViewController {
             }
         }
         
-        DataPersistenceManager.shared.fetchCreatedUsers { results in
+        DataPersistenceManager.shared.fetchUnsyncedUsers { results in
             switch results {
             case .success(let _createdUsers):
                 
@@ -185,7 +185,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            DataPersistenceManager.shared.deleteCreatedUser(at: indexPath.row) { result in
+            DataPersistenceManager.shared.deleteUnsyncedUser(at: indexPath.row) { result in
                 switch result {
                 case .success():
                     self.unsyncedUsers.remove(at: indexPath.row)
@@ -203,6 +203,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
         switch indexPath.section {
         case 0: // Editing a "synced" user
             viewController.workingUser = users[indexPath.row]
+            viewController.isSyncedUser = true
         case 1: // Editing an "unsynced" user
             viewController.workingUser = unsyncedUsers[indexPath.row]
         default: break;
@@ -217,7 +218,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             homeUsersTableView.deselectRow(at: selectedPath, animated: true)
         }
         
-        DataPersistenceManager.shared.fetchCreatedUsers { results in
+        DataPersistenceManager.shared.fetchUnsyncedUsers { results in
             switch results {
             case .success(let _createdUsers):
                 
