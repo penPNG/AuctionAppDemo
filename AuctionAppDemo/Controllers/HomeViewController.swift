@@ -10,7 +10,7 @@ import UIKit
 class HomeViewController: UIViewController {
     
     private var users: [User] = [User]()
-    private var createdUsers: [User] = [User]()
+    private var unsyncedUsers: [User] = [User]()
     var connected: Bool = false
     var networkMonitor: NetworkMonitor!
     
@@ -57,7 +57,8 @@ class HomeViewController: UIViewController {
     }
     
     @objc func addButtonPressed() {
-        let viewController = UserCreateViewController()
+        let viewController = UserViewController()
+        viewController.isEditingUser = false
         navigationController?.pushViewController(viewController, animated: true)
     }
     
@@ -85,7 +86,7 @@ class HomeViewController: UIViewController {
                     for _createdUser in _createdUsers {
                         var createdUser = DataPersistenceManager.shared.unwrapCreatedUser(from: _createdUser)
                         createdUser.id = Int(_createdUser.id)
-                        self?.createdUsers.append(createdUser)
+                        self?.unsyncedUsers.append(createdUser)
                     }
                     self?.homeUsersTableView.reloadData()
                 }
@@ -135,7 +136,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             }
             return users.count
         case 1:
-            return createdUsers.count
+            return unsyncedUsers.count
         default: return 0
         }
     }
@@ -148,7 +149,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             }
             return "Users"
         case 1:
-            if createdUsers.count == 0 {
+            if unsyncedUsers.count == 0 {
                 return nil
             }
             return "Unsynced Users"
@@ -164,7 +165,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
         var content = cell.defaultContentConfiguration( )
         switch indexPath.section {
         case 0: content.text = self.users[indexPath.row].name
-        case 1: content.text = self.createdUsers[indexPath.row].name
+        case 1: content.text = self.unsyncedUsers[indexPath.row].name
         default: content.text = ""
         }
         content.image = UIImage(systemName: "person.circle")
@@ -187,7 +188,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             DataPersistenceManager.shared.deleteCreatedUser(at: indexPath.row) { result in
                 switch result {
                 case .success():
-                    self.createdUsers.remove(at: indexPath.row)
+                    self.unsyncedUsers.remove(at: indexPath.row)
                     tableView.deleteRows(at: [indexPath], with: .automatic)
                 case .failure(let error):
                     print(error.localizedDescription)
@@ -197,20 +198,17 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let viewController = UserViewController()
+        
         switch indexPath.section {
-        case 0:
-            let viewController = UserDetailViewController()
-            viewController.user = users[indexPath.row]
-            navigationController?.pushViewController(viewController, animated: true)
-        case 1:
-            let viewController = UserCreateViewController()
-            viewController.userToEdit = createdUsers[indexPath.row]
-            navigationController?.pushViewController(viewController, animated: true)
-        default:
-            let viewController = UserDetailViewController()
-            viewController.user = emptyUser()
-            navigationController?.pushViewController(viewController, animated: true)
+        case 0: // Editing a "synced" user
+            viewController.workingUser = users[indexPath.row]
+        case 1: // Editing an "unsynced" user
+            viewController.workingUser = unsyncedUsers[indexPath.row]
+        default: break;
         }
+        
+        navigationController?.pushViewController(viewController, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -224,15 +222,15 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             case .success(let _createdUsers):
                 
                 DispatchQueue.main.async { [weak self] in
-                    self?.createdUsers.removeAll()  // The placement of this line caused an infuriating bug, but it's okay now
+                    self?.unsyncedUsers.removeAll()  // The placement of this line caused an infuriating bug, but it's okay now
                     
                     for _createdUser in _createdUsers {
                         print("\(_createdUsers.count) viewWillAppear new users")
                         var createdUser = DataPersistenceManager.shared.unwrapCreatedUser(from: _createdUser)
                         createdUser.id = Int(_createdUser.id)
-                        self?.createdUsers.append(createdUser)
+                        self?.unsyncedUsers.append(createdUser)
                     }
-                    self?.createdUsers = (self?.createdUsers.sorted(by: { $0.id < $1.id }))!
+                    self?.unsyncedUsers = (self?.unsyncedUsers.sorted(by: { $0.id < $1.id }))!
                     self?.homeUsersTableView.reloadData()
                 }
             

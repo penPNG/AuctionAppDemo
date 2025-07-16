@@ -18,7 +18,7 @@ class UserViewController: UIViewController {
     }()
     
     var workingUser = emptyUser()
-    var isEditingUser: Bool = false
+    var isEditingUser: Bool = true
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,6 +33,11 @@ class UserViewController: UIViewController {
         userTableView.keyboardDismissMode = .onDrag
         userTableView.delegate = self
         userTableView.dataSource = self
+    }
+    
+    override func viewDidLayoutSubviews() {
+        userTableView.frame = view.bounds
+        userTableView.sectionHeaderHeight = 24
     }
     
     @objc func keyboardWillShow(_ notification: Notification) {
