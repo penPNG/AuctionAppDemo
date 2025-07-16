@@ -30,7 +30,7 @@ class DataPersistenceManager {
                     }
                     
                     users.forEach { user in
-                        _ = self.wrapUser(from: user, with: context)
+                        _ = self.wrapDownloadedUser(from: user, with: context)
                         do {
                             try context.save()
                             completion(.success(()))
@@ -56,8 +56,8 @@ class DataPersistenceManager {
         fetchCreatedUsers { Result in
             switch Result {
             case .success(let createdUsers):
-                let createdUserEntity = self.castUserEntityToCreatedUserEntity(from: self.wrapUser(from: user, with: context), with: context) 
-                createdUserEntity.id = Int64(createdUsers.count)
+                let UnsyncedUserEntity = self.wrapUnsyncedUser(from: user, with: context)
+                UnsyncedUserEntity.id = Int64(createdUsers.count)
                 do {
                     try context.save()
                     completion(.success(()))
@@ -69,6 +69,30 @@ class DataPersistenceManager {
                 completion(.failure(error))
             }
         }
+    }
+    
+    func saveEditedUser(_ user: User, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("Could not get AppDelegate")
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
+        
+        do {
+            let createdUserEntities = try context.fetch(request)
+            for UnsyncedUserEntity in createdUserEntities {
+                if UnsyncedUserEntity.id == user.id {
+                    context.delete(UnsyncedUserEntity)
+                    let editedUserEntity = wrapUnsyncedUser(from: user, with: context)
+                    try context.save()
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+        
+        
     }
     
     func fetchDownloadedUsers(completion: @escaping (Result<[UserEntity], Error>) -> Void) {
@@ -96,22 +120,22 @@ class DataPersistenceManager {
         }
     }
     
-    func fetchCreatedUsers(completion: @escaping (Result<[CreatedUserEntity], Error>) -> Void) {
+    func fetchCreatedUsers(completion: @escaping (Result<[UnsyncedUserEntity], Error>) -> Void) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("Could not get AppDelegate")
         }
         
         let context = appDelegate.persistentContainer.viewContext
         
-        let request: NSFetchRequest<CreatedUserEntity> = CreatedUserEntity.fetchRequest()
-        var createdUsers: [CreatedUserEntity] = []
+        let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
+        var createdUsers: [UnsyncedUserEntity] = []
         
         do {
             let createdUserEntities = try context.fetch(request)
             print("\(createdUserEntities.count) new users")
             
-            for createdUserEntity in createdUserEntities {
-                createdUsers.append(createdUserEntity)
+            for UnsyncedUserEntity in createdUserEntities {
+                createdUsers.append(UnsyncedUserEntity)
             }
             completion(.success(createdUsers))
         } catch {
@@ -131,15 +155,15 @@ class DataPersistenceManager {
         
         let context = appDelegate.persistentContainer.viewContext
         
-        let request: NSFetchRequest<CreatedUserEntity> = CreatedUserEntity.fetchRequest()
+        let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
         
         do {
             let createdUserEntities = try context.fetch(request)
-            for createdUserEntity in createdUserEntities {
-                if createdUserEntity.id == createdUserID {
-                    context.delete(createdUserEntity)
+            for UnsyncedUserEntity in createdUserEntities {
+                if UnsyncedUserEntity.id == createdUserID {
+                    context.delete(UnsyncedUserEntity)
                     try context.save()
-                    print("deleted \(createdUserEntity.name ?? "") at \(createdUserID)")
+                    print("deleted \(UnsyncedUserEntity.name ?? "") at \(createdUserID)")
                     completion(.success(()))
                 }
             }
@@ -155,14 +179,14 @@ class DataPersistenceManager {
         }
         
         let context = appDelegate.persistentContainer.viewContext
-        let request: NSFetchRequest<CreatedUserEntity> = CreatedUserEntity.fetchRequest()
+        let request: NSFetchRequest<UnsyncedUserEntity> = UnsyncedUserEntity.fetchRequest()
         
         do {
             let createdUserEntities = try context.fetch(request)
-            for createdUserEntity in createdUserEntities {
-                if createdUserEntity.id == editedUser.id {
-                    context.delete(createdUserEntity)
-                    let editedUserEntity = wrapCreatedUser(from: editedUser, with: context)
+            for UnsyncedUserEntity in createdUserEntities {
+                if UnsyncedUserEntity.id == editedUser.id {
+                    context.delete(UnsyncedUserEntity)
+                    let editedUserEntity = wrapUnsyncedUser(from: editedUser, with: context)
                     try context.save()
                 }
             }
@@ -201,7 +225,7 @@ class DataPersistenceManager {
     
 extension DataPersistenceManager {
     // entity casting
-    private func wrapUser(from user: User, with context: NSManagedObjectContext) -> UserEntity {
+    private func wrapDownloadedUser(from user: User, with context: NSManagedObjectContext) -> UserEntity {
         let entity = UserEntity(context: context)
         entity.address_city = user.address?.city
         entity.address_geo_lat = user.address?.geo?.lat
@@ -226,8 +250,8 @@ extension DataPersistenceManager {
         return entity
     }
     
-    private func wrapCreatedUser(from user: User, with context: NSManagedObjectContext) -> CreatedUserEntity {
-        let entity = CreatedUserEntity(context: context)
+    private func wrapUnsyncedUser(from user: User, with context: NSManagedObjectContext) -> UnsyncedUserEntity {
+        let entity = UnsyncedUserEntity(context: context)
         entity.address_city = user.address?.city
         entity.address_geo_lat = user.address?.geo?.lat
         entity.address_geo_lng = user.address?.geo?.lng
@@ -263,7 +287,7 @@ extension DataPersistenceManager {
         return newUser
     }
     
-    func unwrapCreatedUser(from user: CreatedUserEntity) -> User {
+    func unwrapUnsyncedUser(from user: UnsyncedUserEntity) -> User {
         let newUser = User(address: Address(city: user.address_city,
                                             geo: Geo(lat: user.address_geo_lat, lng: user.address_geo_lng),
                                             street: user.address_street, suite: user.address_suite,
@@ -275,8 +299,8 @@ extension DataPersistenceManager {
         return newUser
     }
     
-    func castUserEntityToCreatedUserEntity(from user: UserEntity, with context: NSManagedObjectContext) -> CreatedUserEntity {
-        let entity = CreatedUserEntity(context: context)
+    func castUserEntityToUnsyncedUserEntity(from user: UserEntity, with context: NSManagedObjectContext) -> UnsyncedUserEntity {
+        let entity = UnsyncedUserEntity(context: context)
         entity.address_city = user.address_city
         entity.address_geo_lat = user.address_geo_lat
         entity.address_geo_lng = user.address_geo_lng
@@ -318,7 +342,7 @@ extension DataPersistenceManager {
         return isEqual
     }
     
-    static func compareUserLists(_ oldList: [CreatedUserEntity], compareTo newList: [User]) -> Bool {
+    static func compareUserLists(_ oldList: [UnsyncedUserEntity], compareTo newList: [User]) -> Bool {
         var isEqual = true
         
         if oldList.count != newList.count {

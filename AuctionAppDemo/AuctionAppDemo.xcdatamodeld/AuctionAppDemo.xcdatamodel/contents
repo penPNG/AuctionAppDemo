@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="CreatedUserEntity" representedClassName="CreatedUserEntity" syncable="YES" codeGenerationType="class">
+    <entity name="UnsyncedUserEntity" representedClassName="UnsyncedUserEntity" syncable="YES" codeGenerationType="class">
         <attribute name="address_city" optional="YES" attributeType="String"/>
         <attribute name="address_geo_lat" optional="YES" attributeType="String"/>
         <attribute name="address_geo_lng" optional="YES" attributeType="String"/>

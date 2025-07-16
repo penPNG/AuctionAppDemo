@@ -84,7 +84,7 @@ class HomeViewController: UIViewController {
                 
                 DispatchQueue.main.async { [weak self] in
                     for _createdUser in _createdUsers {
-                        var createdUser = DataPersistenceManager.shared.unwrapCreatedUser(from: _createdUser)
+                        var createdUser = DataPersistenceManager.shared.unwrapUnsyncedUser(from: _createdUser)
                         createdUser.id = Int(_createdUser.id)
                         self?.unsyncedUsers.append(createdUser)
                     }
@@ -226,7 +226,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
                     
                     for _createdUser in _createdUsers {
                         print("\(_createdUsers.count) viewWillAppear new users")
-                        var createdUser = DataPersistenceManager.shared.unwrapCreatedUser(from: _createdUser)
+                        var createdUser = DataPersistenceManager.shared.unwrapUnsyncedUser(from: _createdUser)
                         createdUser.id = Int(_createdUser.id)
                         self?.unsyncedUsers.append(createdUser)
                     }
