@@ -54,6 +54,7 @@ class UserViewController: UIViewController {
     }
     
     // TODO: figure out how alerts work, saving blank data is dangerous
+    // NOTE: figured it out
     @objc func saveUser() {
         if !isEditingUser {
             DataPersistenceManager.shared.saveCreatedUser(workingUser) { result in
