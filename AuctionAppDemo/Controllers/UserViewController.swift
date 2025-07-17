@@ -56,32 +56,48 @@ class UserViewController: UIViewController {
     // TODO: figure out how alerts work, saving blank data is dangerous
     // NOTE: figured it out
     @objc func saveUser() {
-        if !isEditingUser {
-            DataPersistenceManager.shared.saveCreatedUser(workingUser) { result in
-                switch result {
-                case .success(()):
-                    #if DEBUG
-                    print("New user saved successfully")
-                    #endif
-                case .failure(let error):
-                    #if DEBUG
-                    print("Failed to save new user: \(error)")
-                    #endif
+        var valid = false
+        var title = ""; var reason = ""
+        validateUser(with: workingUser) { _valid, _title, _reason in
+            valid = _valid
+            if valid { return }
+            title = _title
+            reason = _reason
+        }
+        let alert = UIAlertController(title: title, message: reason, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Default Action"), style: .default, handler: { _ in
+                NSLog("OK Action")
+        }))
+        if valid {
+            if !isEditingUser {
+                DataPersistenceManager.shared.saveCreatedUser(workingUser) { result in
+                    switch result {
+                    case .success(()):
+#if DEBUG
+                        print("New user saved successfully")
+#endif
+                    case .failure(let error):
+#if DEBUG
+                        print("Failed to save new user: \(error)")
+#endif
+                    }
+                }
+            } else {
+                DataPersistenceManager.shared.saveEditedUser(with: workingUser, isSynced: isSyncedUser) { result in
+                    switch result {
+                    case .success(()):
+#if DEBUG
+                        print("Saved changes to \(self.workingUser.name ?? "user") successfully")
+#endif
+                    case .failure(let error):
+#if DEBUG
+                        print("Failed to save new user: \(error)")
+#endif
+                    }
                 }
             }
         } else {
-            DataPersistenceManager.shared.saveEditedUser(with: workingUser, isSynced: isSyncedUser) { result in
-                switch result {
-                case .success(()):
-                    #if DEBUG
-                    print("Saved changes to \(self.workingUser.name ?? "user") successfully")
-                    #endif
-                case .failure(let error):
-                    #if DEBUG
-                    print("Failed to save new user: \(error)")
-                    #endif
-                }
-            }
+            self.present(alert, animated: true)
         }
         
         navigationController?.popViewController(animated: true)
@@ -141,6 +157,7 @@ extension UserViewController: UITableViewDelegate, UITableViewDataSource {
             case 2: textInput.placeholder = "Username"
                 if isEditingUser { textInput.text = "\(self.workingUser.username ?? "")" }
             case 3: textInput.placeholder = "Email"
+                textInput.textContentType = .emailAddress
                 if isEditingUser { textInput.text = "\(self.workingUser.email ?? "")" }
             case 4: textInput.placeholder = "Phone"
                 if isEditingUser { textInput.text = "\(self.workingUser.phone ?? "")" }
