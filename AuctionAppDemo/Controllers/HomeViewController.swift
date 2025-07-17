@@ -248,8 +248,8 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
                 DispatchQueue.main.async { [weak self] in
                     self?.unsyncedUsers.removeAll()  // The placement of this line caused an infuriating bug, but it's okay now
                     
+                    print("\(_createdUsers.count) viewWillAppear new users")
                     for _createdUser in _createdUsers {
-                        print("\(_createdUsers.count) viewWillAppear new users")
                         var createdUser = DataPersistenceManager.shared.unwrapUnsyncedUser(from: _createdUser)
                         createdUser.id = Int(_createdUser.id)
                         self?.unsyncedUsers.append(createdUser)
